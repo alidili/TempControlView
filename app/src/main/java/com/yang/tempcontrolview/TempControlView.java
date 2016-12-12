@@ -45,7 +45,7 @@ public class TempControlView extends View {
     // 文本提示
     private String title = "最高温度设置";
     // 温度
-    private int temperature;
+    private int temperature = 15;
     // 最低温度
     private int minTemp = 15;
     // 最高温度
