@@ -7,4 +7,4 @@
 ## 博客地址
 [CSDN博客地址](http://blog.csdn.net/kong_gu_you_lan/article/details/53573439)
 
-[简书地址](http://www.jianshu.com/users/34ece31cd6eb/latest_articles)
+[简书地址](http://www.jianshu.com/p/2f7bfe1d7345)
