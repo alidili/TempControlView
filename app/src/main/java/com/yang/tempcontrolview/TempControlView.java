@@ -50,8 +50,10 @@ public class TempControlView extends View {
     private int minTemp = 15;
     // 最高温度
     private int maxTemp = 30;
-    // 四格（每格4.5度，共18度）代表温度1度
+    // 四格代表温度1度
     private int angleRate = 4;
+    // 每格的角度
+    private float angleOne = (float) 270 / (maxTemp - minTemp) / angleRate;
     // 按钮图片
     private Bitmap buttonImage = BitmapFactory.decodeResource(getResources(),
             R.mipmap.btn_rotate);
@@ -150,16 +152,16 @@ public class TempControlView extends View {
         // 逆时针旋转135-2度
         canvas.rotate(-133);
         dialPaint.setColor(Color.parseColor("#3CB7EA"));
-        for (int i = 0; i < 60; i++) {
+        for (int i = 0; i < angleRate * (maxTemp - minTemp); i++) {
             canvas.drawLine(0, -dialRadius, 0, -dialRadius + scaleHeight, dialPaint);
-            canvas.rotate(4.5f);
+            canvas.rotate(angleOne);
         }
 
         canvas.rotate(90);
         dialPaint.setColor(Color.parseColor("#E37364"));
         for (int i = 0; i < (temperature - minTemp) * angleRate; i++) {
             canvas.drawLine(0, -dialRadius, 0, -dialRadius + scaleHeight, dialPaint);
-            canvas.rotate(4.5f);
+            canvas.rotate(angleOne);
         }
         canvas.restore();
     }
@@ -290,7 +292,7 @@ public class TempControlView extends View {
             case MotionEvent.ACTION_UP: {
                 if (isDown && isMove) {
                     // 纠正指针位置
-                    rotateAngle = (float) ((temperature - minTemp) * angleRate * 4.5);
+                    rotateAngle = (float) ((temperature - minTemp) * angleRate * angleOne);
                     invalidate();
                     // 回调温度改变监听
                     onTempChangeListener.change(temperature);
@@ -352,7 +354,26 @@ public class TempControlView extends View {
         } else if (rotateAngle > 270) {
             rotateAngle = 270;
         }
-        temperature = (int) (rotateAngle / 4.5) / angleRate + minTemp;
+        // 加上0.5是为了取整时四舍五入
+        temperature = (int) ((rotateAngle / angleOne) / angleRate + 0.5) + minTemp;
+    }
+
+    /**
+     * 设置几格代表1度，默认4格
+     *
+     * @param angleRate 几格代表1度
+     */
+    public void setAngleRate(int angleRate) {
+        this.angleRate = angleRate;
+    }
+
+    /**
+     * 设置温度
+     *
+     * @param temp 设置的温度
+     */
+    public void setTemp(int temp) {
+        setTemp(minTemp, maxTemp, temp);
     }
 
     /**
@@ -365,9 +386,16 @@ public class TempControlView extends View {
     public void setTemp(int minTemp, int maxTemp, int temp) {
         this.minTemp = minTemp;
         this.maxTemp = maxTemp;
-        this.temperature = temp;
-        this.angleRate = 60 / (maxTemp - minTemp);
-        rotateAngle = (float) ((temp - minTemp) * angleRate * 4.5);
+        if (temp < minTemp) {
+            this.temperature = minTemp;
+        } else {
+            this.temperature = temp;
+        }
+
+        // 计算旋转角度
+        rotateAngle = (float) ((temp - minTemp) * angleRate * angleOne);
+        // 计算每格的角度
+        angleOne = (float) 270 / (maxTemp - minTemp) / angleRate;
         invalidate();
     }
 
