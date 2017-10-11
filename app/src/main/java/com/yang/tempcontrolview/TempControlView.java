@@ -64,6 +64,8 @@ public class TempControlView extends View {
     private PaintFlagsDrawFilter paintFlagsDrawFilter;
     // 温度改变监听
     private OnTempChangeListener onTempChangeListener;
+    // 控件点击监听
+    private OnClickListener onClickListener;
 
     // 以下为旋转按钮相关
 
@@ -290,14 +292,23 @@ public class TempControlView extends View {
 
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP: {
-                if (isDown && isMove) {
-                    // 纠正指针位置
-                    rotateAngle = (float) ((temperature - minTemp) * angleRate * angleOne);
-                    invalidate();
-                    // 回调温度改变监听
-                    onTempChangeListener.change(temperature);
+                if (isDown) {
+                    if (isMove) {
+                        // 纠正指针位置
+                        rotateAngle = (float) ((temperature - minTemp) * angleRate * angleOne);
+                        invalidate();
+                        // 回调温度改变监听
+                        if (onTempChangeListener != null) {
+                            onTempChangeListener.change(temperature);
+                        }
+                        isMove = false;
+                    } else {
+                        // 点击事件
+                        if (onClickListener != null) {
+                            onClickListener.onClick(temperature);
+                        }
+                    }
                     isDown = false;
-                    isMove = false;
                 }
                 break;
             }
@@ -409,6 +420,15 @@ public class TempControlView extends View {
     }
 
     /**
+     * 设置点击监听
+     *
+     * @param onClickListener 点击回调接口
+     */
+    public void setOnClickListener(OnClickListener onClickListener) {
+        this.onClickListener = onClickListener;
+    }
+
+    /**
      * 温度改变监听接口
      */
     public interface OnTempChangeListener {
@@ -418,6 +438,18 @@ public class TempControlView extends View {
          * @param temp 温度
          */
         void change(int temp);
+    }
+
+    /**
+     * 点击回调接口
+     */
+    public interface OnClickListener {
+        /**
+         * 点击回调方法
+         *
+         * @param temp 温度
+         */
+        void onClick(int temp);
     }
 
     public int dp2px(float dp) {

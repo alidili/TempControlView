@@ -2,6 +2,7 @@ package com.yang.tempcontrolview;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 import android.widget.Toast;
 
 /**
@@ -31,6 +32,13 @@ public class MainActivity extends AppCompatActivity {
         tempControl.setOnTempChangeListener(new TempControlView.OnTempChangeListener() {
             @Override
             public void change(int temp) {
+                Toast.makeText(MainActivity.this, temp + "°", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        tempControl.setOnClickListener(new TempControlView.OnClickListener() {
+            @Override
+            public void onClick(int temp) {
                 Toast.makeText(MainActivity.this, temp + "°", Toast.LENGTH_SHORT).show();
             }
         });
