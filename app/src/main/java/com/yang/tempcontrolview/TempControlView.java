@@ -225,14 +225,10 @@ public class TempControlView extends View {
                 (height - buttonShadowHeight) / 2, buttonPaint);
 
         Matrix matrix = new Matrix();
-        // 设置按钮位置
-        matrix.setTranslate(buttonWidth / 2, buttonHeight / 2);
-        // 设置旋转角度
-        matrix.preRotate(45 + rotateAngle);
-        // 按钮位置还原，此时按钮位置在左上角
-        matrix.preTranslate(-buttonWidth / 2, -buttonHeight / 2);
-        // 将按钮移到中心位置
-        matrix.postTranslate((width - buttonWidth) / 2, (height - buttonHeight) / 2);
+        // 设置按钮位置，移动到控件中心
+        matrix.setTranslate((width - buttonWidth) / 2, (height - buttonHeight) / 2);
+        // 设置旋转角度，旋转中心为按钮中心
+        matrix.postRotate(45 + rotateAngle, width / 2, height / 2);
 
         //设置抗锯齿
         canvas.setDrawFilter(paintFlagsDrawFilter);

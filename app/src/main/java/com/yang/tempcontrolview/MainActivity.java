@@ -2,7 +2,6 @@ package com.yang.tempcontrolview;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.view.View;
 import android.widget.Toast;
 
 /**
@@ -17,14 +16,12 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TempControlView tempControl;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        tempControl = (TempControlView) findViewById(R.id.temp_control);
+        TempControlView tempControl = findViewById(R.id.temp_control);
         // 设置三格代表温度1度
         tempControl.setAngleRate(3);
         tempControl.setTemp(16, 37, 16);
