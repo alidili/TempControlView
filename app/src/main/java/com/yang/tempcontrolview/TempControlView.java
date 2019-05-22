@@ -73,6 +73,10 @@ public class TempControlView extends View {
     private float rotateAngle;
     // 当前的角度
     private float currentAngle;
+    /**
+     * 是否可以旋转
+     */
+    private boolean canRotate = false;
 
     public TempControlView(Context context) {
         this(context, null);
@@ -143,6 +147,7 @@ public class TempControlView extends View {
         drawTemp(canvas);
     }
 
+
     /**
      * 绘制刻度盘
      *
@@ -151,19 +156,20 @@ public class TempControlView extends View {
     private void drawScale(Canvas canvas) {
         canvas.save();
         canvas.translate(getWidth() / 2, getHeight() / 2);
-        // 逆时针旋转135-2度
-        canvas.rotate(-133);
+        // 顺时针旋转135-2度
+        canvas.rotate(133);
+        //未达到的温度
         dialPaint.setColor(Color.parseColor("#3CB7EA"));
-        for (int i = 0; i < angleRate * (maxTemp - minTemp); i++) {
+        for (int i = angleRate * maxTemp; i > angleRate * temperature; i--) {
             canvas.drawLine(0, -dialRadius, 0, -dialRadius + scaleHeight, dialPaint);
-            canvas.rotate(angleOne);
+            canvas.rotate(-angleOne);
         }
 
-        canvas.rotate(90);
+        //已经达到的温度
         dialPaint.setColor(Color.parseColor("#E37364"));
-        for (int i = 0; i < (temperature - minTemp) * angleRate; i++) {
+        for (int i = temperature * angleRate; i >= minTemp * angleRate; i--) {
             canvas.drawLine(0, -dialRadius, 0, -dialRadius + scaleHeight, dialPaint);
-            canvas.rotate(angleOne);
+            canvas.rotate(-angleOne);
         }
         canvas.restore();
     }
@@ -196,7 +202,13 @@ public class TempControlView extends View {
 
         // 绘制最小温度标识
         // 最小温度如果小于10，显示为0x
-        String minTempFlag = minTemp < 10 ? "0" + minTemp : minTemp + "";
+        String minTempFlag = "";
+        if (minTemp <= 0) {
+            minTempFlag = minTemp + "";
+        } else {
+            minTempFlag = minTemp < 10 ? "0" + minTemp : minTemp + "";
+        }
+
         float tempFlagWidth = titlePaint.measureText(maxTemp + "");
         canvas.rotate(55, width / 2, height / 2);
         canvas.drawText(minTempFlag, (width - tempFlagWidth) / 2, height + dp2px(5), tempFlagPaint);
@@ -255,61 +267,65 @@ public class TempControlView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                isDown = true;
-                float downX = event.getX();
-                float downY = event.getY();
-                currentAngle = calcAngle(downX, downY);
-                break;
+        if (!canRotate) {
+            return super.onTouchEvent(event);
+        } else {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    isDown = true;
+                    float downX = event.getX();
+                    float downY = event.getY();
+                    currentAngle = calcAngle(downX, downY);
+                    break;
 
-            case MotionEvent.ACTION_MOVE:
-                isMove = true;
-                float targetX;
-                float targetY;
-                downX = targetX = event.getX();
-                downY = targetY = event.getY();
-                float angle = calcAngle(targetX, targetY);
+                case MotionEvent.ACTION_MOVE:
+                    isMove = true;
+                    float targetX;
+                    float targetY;
+                    downX = targetX = event.getX();
+                    downY = targetY = event.getY();
+                    float angle = calcAngle(targetX, targetY);
 
-                // 滑过的角度增量
-                float angleIncreased = angle - currentAngle;
+                    // 滑过的角度增量
+                    float angleIncreased = angle - currentAngle;
 
-                // 防止越界
-                if (angleIncreased < -270) {
-                    angleIncreased = angleIncreased + 360;
-                } else if (angleIncreased > 270) {
-                    angleIncreased = angleIncreased - 360;
-                }
-
-                IncreaseAngle(angleIncreased);
-                currentAngle = angle;
-                invalidate();
-                break;
-
-            case MotionEvent.ACTION_CANCEL:
-            case MotionEvent.ACTION_UP: {
-                if (isDown) {
-                    if (isMove) {
-                        // 纠正指针位置
-                        rotateAngle = (float) ((temperature - minTemp) * angleRate * angleOne);
-                        invalidate();
-                        // 回调温度改变监听
-                        if (onTempChangeListener != null) {
-                            onTempChangeListener.change(temperature);
-                        }
-                        isMove = false;
-                    } else {
-                        // 点击事件
-                        if (onClickListener != null) {
-                            onClickListener.onClick(temperature);
-                        }
+                    // 防止越界
+                    if (angleIncreased < -270) {
+                        angleIncreased = angleIncreased + 360;
+                    } else if (angleIncreased > 270) {
+                        angleIncreased = angleIncreased - 360;
                     }
-                    isDown = false;
+
+                    IncreaseAngle(angleIncreased);
+                    currentAngle = angle;
+                    invalidate();
+                    break;
+
+                case MotionEvent.ACTION_CANCEL:
+                case MotionEvent.ACTION_UP: {
+                    if (isDown) {
+                        if (isMove) {
+                            // 纠正指针位置
+                            rotateAngle = (float) ((temperature - minTemp) * angleRate * angleOne);
+                            invalidate();
+                            // 回调温度改变监听
+                            if (onTempChangeListener != null) {
+                                onTempChangeListener.change(temperature);
+                            }
+                            isMove = false;
+                        } else {
+                            // 点击事件
+                            if (onClickListener != null) {
+                                onClickListener.onClick(temperature);
+                            }
+                        }
+                        isDown = false;
+                    }
+                    break;
                 }
-                break;
             }
+            return true;
         }
-        return true;
     }
 
     /**
@@ -398,13 +414,27 @@ public class TempControlView extends View {
         } else {
             this.temperature = temp;
         }
-
-        // 计算旋转角度
-        rotateAngle = (float) ((temp - minTemp) * angleRate * angleOne);
         // 计算每格的角度
         angleOne = (float) 270 / (maxTemp - minTemp) / angleRate;
+        // 计算旋转角度
+        rotateAngle = (float) ((temp - minTemp) * angleRate * angleOne);
+
         invalidate();
     }
+
+    /**
+     * 设置旋钮是否可以旋转
+     *
+     * @param canRotate
+     */
+    public void setCanRotate(boolean canRotate) {
+        this.canRotate = canRotate;
+    }
+
+    public boolean getCanRotate() {
+        return this.canRotate;
+    }
+
 
     /**
      * 设置温度改变监听

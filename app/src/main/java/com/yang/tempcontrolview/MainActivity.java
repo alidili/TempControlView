@@ -23,8 +23,10 @@ public class MainActivity extends AppCompatActivity {
 
         TempControlView tempControl = findViewById(R.id.temp_control);
         // 设置三格代表温度1度
-        tempControl.setAngleRate(3);
-        tempControl.setTemp(16, 37, 16);
+        tempControl.setAngleRate(1);
+        tempControl.setTemp(16, 37, 20);
+        //设置旋钮是否可旋转
+        tempControl.setCanRotate(true);
 
         tempControl.setOnTempChangeListener(new TempControlView.OnTempChangeListener() {
             @Override
